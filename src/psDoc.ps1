@@ -19,7 +19,7 @@ function FixString ($in = '', [bool]$includeBreaks = $false){
 function Update-Progress($name, $action){
     Write-Progress -Activity "Rendering $action for $name" -CurrentOperation "Completed $progress of $totalCommands." -PercentComplete $(($progress/$totalCommands)*100)
 }
-$i = 0
+
 $commandsHelp = (Get-Command -module $moduleName) | get-help -full | Where-Object {! $_.name.EndsWith('.ps1')}
 
 foreach ($h in $commandsHelp){
@@ -33,7 +33,7 @@ foreach ($h in $commandsHelp){
 
     # Parse the related links and assign them to a links hashtable.
     if(($h.relatedLinks | Out-String).Trim().Length -gt 0) {
-        $links = $h.relatedLinks.navigationLink | % {
+        $links = $h.relatedLinks.navigationLink | ForEach-Object {
             if($_.uri){ @{name = $_.uri; link = $_.uri; target='_blank'} }
             if($_.linkText){ @{name = $_.linkText; link = "#$($_.linkText)"; cssClass = 'psLink'; target='_top'} }
         }
@@ -42,7 +42,7 @@ foreach ($h in $commandsHelp){
 
     # Add parameter aliases to the object.
     foreach($p in $h.parameters.parameter ){
-        $paramAliases = ($cmdHelp.parameters.values | where name -like $p.name | select aliases).Aliases
+        $paramAliases = ($cmdHelp.parameters.values | Where-Object name -like $p.name | Select-Object aliases).Aliases
         if($paramAliases){
             $p | Add-Member Aliases "$($paramAliases -join ', ')" -Force
         }
